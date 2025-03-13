@@ -18,11 +18,12 @@ REORDER_PROB = 0.2
 
 reorder_buffer = []  # Global buffer for packets to be reordered
 def simulateNetwork():
-    
+    """
+    Function that listens for packets from the sender and 
+    simulates the network conditions.
+    """
     global expected_seq_num
-    print("here")
     while True:
-
         if reorder_buffer and random.random() < 0.5:
             buffered_packet = reorder_buffer.pop(0)
             socket_mediator.sendto(buffered_packet.encode(), receiver_address)

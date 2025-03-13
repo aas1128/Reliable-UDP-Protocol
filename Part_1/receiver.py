@@ -1,34 +1,36 @@
-import socket  # For creating UDP sockets
+import socket 
 import time
 import random
 # Configuration Constants
-receiverPort = 10000    # Port to receive packets on
-PACKET_SIZE = 5
+receiverPort = 10000  # Port to receive packets on
+PACKET_SIZE = 5 #Default packet size across the Protocol
 
-#Binding the mediator socket to port 9000
+#Binding the mediator socket to port 10000
 socket_receiver= socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-socket_receiver.bind(('127.0.0.1', receiverPort))
-sender_address = ('127.0.0.1', 8000)
-
+socket_receiver.bind(('127.0.0.1', receiverPort)) 
+sender_address = ('127.0.0.1', 8000) #Address which the mediator would sent the packets to
 received_packets = []
 expected_seq_num = 0
 buffer = {}  # Optional: to store out-of-order packets
 
 
 def receiver():
+    """
+    Function that listens for packets and accounts for Dropped, reordered, and corrupted packets.
+    """
     pass
-
-#IM going to send Acks straight back to the sender rather than through the mediator
+#Im going to send Acks straight back to the sender rather than through the mediator
 #reordering is the annoying part
     global expected_seq_num
+    #Loop that runs and listens for packets sent from the sender
     while(True):
         packet, mediator_address = socket_receiver.recvfrom(PACKET_SIZE + 6)
         packet_str = packet.decode()
-        print("this is the packet" , packet_str)
+        print("this is the packet received from sender" , packet_str)
         data = 0
         seq_num = " "
         checksum = " "
-
+        #Split packet into data, checksum and the seq_num
         try:
             data, seq_num, checksum = packet_str.split(':', 2)
             seq_num = int(seq_num)
@@ -37,8 +39,7 @@ def receiver():
             print(f"[ERROR] Malformed packet received for packet {seq_num}. Ignoring...")
             continue
 
-
-     ######## this code is for the receiver checks need to be made
+        #These are checks for corrupted, out of order, and dropped packets
         if checksum != compute_checksum(data):
             print(f"[ERROR] Checksum mismatch for packet {seq_num}. Please Retransmit...")
             continue
@@ -46,11 +47,10 @@ def receiver():
             received_packets.append(packet_str)
 
         if seq_num == expected_seq_num:
-            # Deliver the packet (for example, print it)
             print(f"Delivered packet {seq_num} with data: '{data}'")
             expected_seq_num += 1
 
-        # Optionally, check the buffer for subsequent packets
+        # check the buffer for subsequent packets
             while expected_seq_num in buffer:
                 buffered_data = buffer.pop(expected_seq_num)
                 print(f"Delivered buffered packet {expected_seq_num} with data: '{buffered_data}'")
@@ -71,19 +71,12 @@ def receiver():
         socket_receiver.sendto(ack, sender_address)
         print(f"Sent ACK for packet {expected_seq_num - 1}")  
 
-        # time.sleep(1)
-        # if seq_num != expected_seq_num:
-        #      print(f"[ERROR] Wrong sequence number for packet {seq_num}. Ignoring...")
-        #      continue 
-        # else:
-        #     expected_seq_num += 1
-
-        # ack = str(seq_num).encode()
-        # socket_receiver.sendto(ack, receiver_address)
-        # print(f"[Receiver] Sent ACK for packet {seq_num}")
-
 
 def compute_checksum(data):
+    """
+    Function recomputes the checksum for the data to 
+    check for corrupted data.
+    """
     sum = 0
     for char in data:
         sum += ord(char)
