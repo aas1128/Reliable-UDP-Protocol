@@ -1,34 +1,43 @@
-
 import socket
 import threading
 import time
 import struct
 
-windowSize = 5
-timeBetweenPackets = 5
-packetSize = 5
-
-base = 0
-next_seq = 0
-sent_packets = {}
+#Configuration for the sender 
+windowSize = 5 #Default window size because the packet size is 5 
+timeBetweenPackets = 5 #Used for the sliding window
+packetSize = 5 # Default packet size across the entire Protocol
+base = 0 #Latest packet sent
+next_seq = 0 #Next expected Seq number
+sent_packets = {} #Tracks all already sent packets 
 timer = None
 lock = threading.Lock() 
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sock.bind(('127.0.0.1', 8000))
-receiver_address = ('127.0.0.1', 9000)
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) 
+sock.bind(('127.0.0.1', 8000)) #Create and bind to Port 8000
+receiver_address = ('127.0.0.1', 9000) #Port and IP for the mediator in this case
 num_packets = 0
 
+
 def main():
-    
+    """
+    Main function that reads in input from user and sends to the mediator
+    """
     data = input("Please enter data to be sent: ")
     send_packet(data)
     
 
 def send_packet(data):
+    """
+    Send Packets is a function that takes in data from the user
+    splits it into packets and starts a thread which listens for Acks 
+    before sending all the packets to the mediator
+
+    Params:
+        Data: A string read in from the user
+    """
     global next_seq, timer, base, timer,num_packets
     #find the total amount of packets needed to send
     num_packets = (len(data) + packetSize - 1) // packetSize
-
     #Start a separate thread to listen for ACKs
     ack_listener = threading.Thread(target=listen_for_ack)
     ack_listener.daemon = True
@@ -42,15 +51,12 @@ def send_packet(data):
             start = next_seq * packetSize
             end = min(start + packetSize, len(data))
             packet_data = data[start:end]
-
             #create a new packet
             newPacket = createPacket(packet_data, next_seq)
-            
             receiver_address = ('127.0.0.1', 9000)
-
-            #Send to the intermediary
+            #Send to the mediator
             sock.sendto(newPacket.encode(), receiver_address)
-            #base is supposed to be updated in the listen_for_ack thread
+            #Add the sent packet to the dictionary incase of resend
             sent_packets[next_seq] = newPacket
 
             # Move to the next sequence number
@@ -62,19 +68,27 @@ def send_packet(data):
                 timer = threading.Timer(10, handle_timeout)
                 timer.daemon = True
                 timer.start()
-
-            # Wait briefly to control sending rate
-
-
     
 def createPacket(data, seqNum):
+    """
+    Function called from the send_packet which takes in
+    already split data and assigns it a sequence number
+    and checksum to create a packet to send.
+    Params:
+        Data: Split data for 1 packet
+    """
     checkSum = generateCheckSum(data)
     packet = data + ":" + str(seqNum) + ":" + str(checkSum)
-    
     return (packet)
 
 
 def generateCheckSum(data):
+    """
+    Function called from the createPacket function which takes in
+    already split data and generates a checksum for it.
+    Params:
+        Data: Split data for 1 packet
+    """
     sum = 0
     for char in data:
         sum += ord(char)
@@ -84,9 +98,14 @@ def generateCheckSum(data):
 
 
 def handle_timeout():
+    """
+    Function called when packets have been sent but Acks havent been
+    received. Resends all packets in the current window.
+    """
     global timer
     with lock:
         print("Timeout! Resending all packets in the window.")
+        #Resends all packets in the window incase of timeout
         for seq_num in range(base, next_seq):
             if seq_num in sent_packets:
                 sock.sendto(sent_packets[seq_num].encode(), receiver_address)
@@ -97,6 +116,10 @@ def handle_timeout():
         timer.start()
 
 def listen_for_ack(): 
+    """
+    Function called from  send_packet which operates on its thread 
+    and listens for Acks send from previously sent packets
+    """
     global base, timer, num_packets
     while True:
         # Wait for ACK packet

@@ -15,7 +15,10 @@ client_socket.bind(('127.0.0.1', 6969))
 server_address = ('127.0.0.1', 7979)
 
 def main():
-    print("here")
+    """
+    Main function that reads in a filePath and 
+    creates packets which are sent to the server
+    """
     filepath = input("Enter the path to the file: ")
     if not os.path.isfile(filepath):
         print("Error: The file path is invalid or the file does not exist.")
@@ -26,11 +29,17 @@ def main():
         
 
 def split_into_packets(filepath, packet_size):
+    """
+    Helper function with takes in the contents of a file 
+    and splits it into an array of length 5
+    """
+    #Opens file and reads contents
     with open(filepath, 'r') as f:
         content = f.read()
     packet_data = []
     
     pos = 0
+    #Reads in 5 chars at a time and creates packets
     while pos < len(content):
         packet_data.append(content[pos:pos+packet_size])
         pos += packet_size
@@ -38,6 +47,10 @@ def split_into_packets(filepath, packet_size):
     return packet_data
     
 def send_packets(all_packets):
+    """
+    Function that takes in a list of packets and sends it to 
+    the server with a generated checksum and expected seq num
+    """
     #Start a separate thread to listen for ACKs
     ack_listener = threading.Thread(target=listen_for_ack)
     ack_listener.daemon = True
@@ -68,12 +81,25 @@ def send_packets(all_packets):
 
            
 def createPacket(data, seqNum):
+    """
+    Function called from the send_packet which takes in
+    already split data and assigns it a sequence number
+    and checksum to create a packet to send.
+    Params:
+        Data: Split data for 1 packet
+    """
     checkSum = generateCheckSum(data)
     packet = data + ":" + str(seqNum) + ":" + str(checkSum)
     return (packet)
 
 
 def generateCheckSum(data):
+    """
+    Function called from the createPacket function which takes in
+    already split data and generates a checksum for it.
+    Params:
+        Data: Split data for 1 packet
+    """
     sum = 0
     for char in data:
         sum += ord(char)
@@ -82,6 +108,10 @@ def generateCheckSum(data):
 
         
 def listen_for_ack(): 
+    """
+    Function called from  send_packet which operates on its thread 
+    and listens for Acks send from previously sent packets
+    """
     global base, timer, num_packets
     while True:
         # Wait for ACK packet
@@ -125,6 +155,10 @@ def listen_for_ack():
 
 
 def handle_timeout():
+    """
+    Function called when packets have been sent but Acks havent been
+    received. Resends all packets in the current window.
+    """
     global timer
     with lock:
         print("Timeout! Resending all packets in the window.")
