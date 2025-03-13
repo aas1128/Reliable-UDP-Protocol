@@ -12,6 +12,10 @@ buffer = {}
 PACKET_SIZE = 5
 
 def server():
+     """
+    The server listens for incoming packets from the client and has code 
+    which account for corrupted, out-of-order, and reordered
+    """
      global expected_seq_num, buffer,received_packets
      while(True):
         packet, client_address = server_socket.recvfrom(PACKET_SIZE + 6)
@@ -80,6 +84,12 @@ def server():
 
 
 def compute_checksum(data):
+    """
+    Function called from the createPacket function which takes in
+    already split data and generates a checksum for it.
+    Params:
+        Data: Split data for 1 packet
+    """
     sum = 0
     for char in data:
         sum += ord(char)
@@ -87,7 +97,10 @@ def compute_checksum(data):
     return int(sum)
 
 def write_file(received_packets):
-    
+    """
+    Fuction with takes all the packets and writes them to a 
+    file in the parent directory
+    """
     with open("createdFile.txt", "a") as file:
         for packets in received_packets:
             file.write(packets)
