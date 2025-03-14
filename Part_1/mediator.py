@@ -12,8 +12,8 @@ socket_mediator.bind(('127.0.0.1', mediatorPort))
 expected_seq_num = 0  # Next expected sequence number
 receiver_address = ('127.0.0.1', 10000) #Port for the receiver
 
-LOSS_PROB = 0.2    # 20% chance to drop a packet
-CORRUPT_PROB = 0.2   # 20% chance to corrupt a packet
+LOSS_PROB = 0.5   # 20% chance to drop a packet
+CORRUPT_PROB = 0.2  # 20% chance to corrupt a packet
 REORDER_PROB = 0.2
 
 reorder_buffer = []  # Global buffer for packets to be reordered
@@ -24,10 +24,10 @@ def simulateNetwork():
     """
     global expected_seq_num
     while True:
-        if reorder_buffer and random.random() < 0.5:
-            buffered_packet = reorder_buffer.pop(0)
-            socket_mediator.sendto(buffered_packet.encode(), receiver_address)
-            print("[Mediator] Forwarded buffered packet to receiver.")
+        # if reorder_buffer and random.random() < 0.5:
+        #     buffered_packet = reorder_buffer.pop(0)
+        #     socket_mediator.sendto(buffered_packet.encode(), receiver_address)
+        #     print("[Mediator] Forwarded buffered packet to receiver.")
 
         # Wait for a packet
         packet, sender_address = socket_mediator.recvfrom(PACKET_SIZE + 6)
@@ -50,19 +50,19 @@ def simulateNetwork():
             print("[Mediator] Packet dropped (simulated loss).")
             continue 
 
-        #This packet might get a byte corrupted 
-        if random.random() < CORRUPT_PROB:
-            print("[Mediator] Packet corrupted (simulated corruption).")
-            #replace a random character with 'X'
-            if len(packet_str) > 0:
-                idx = random.randint(0, len(packet_str) - 1)
-                packet_str = packet_str[:idx] + "X" + packet_str[idx+1:]
+        # #This packet might get a byte corrupted 
+        # if random.random() < CORRUPT_PROB:
+        #     print("[Mediator] Packet corrupted (simulated corruption).")
+        #     #replace a random character with 'X'
+        #     if len(packet_str) > 0:
+        #         idx = random.randint(0, len(packet_str) - 1)
+        #         packet_str = packet_str[:idx] + "X" + packet_str[idx+1:]
         
 
-        if random.random() < REORDER_PROB:
-            print("[Mediator] Packet buffered for reordering (simulated reordering).")
-            reorder_buffer.append(packet_str)  # Buffer the packet as-is
-            continue  # Do not forward immediately
+        # if random.random() < REORDER_PROB:
+        #     print("[Mediator] Packet buffered for reordering (simulated reordering).")
+        #     reorder_buffer.append(packet_str)  # Buffer the packet as-is
+        #     continue  # Do not forward immediately
 
         socket_mediator.sendto(packet_str.encode(), receiver_address)
         print("[Mediator] Forwarded packet to receiver.")

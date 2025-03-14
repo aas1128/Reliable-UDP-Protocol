@@ -101,6 +101,7 @@ def write_file(received_packets):
     Fuction with takes all the packets and writes them to a 
     file in the parent directory
     """
+    print("Writing to createdFile.txt")
     with open("createdFile.txt", "a") as file:
         for packets in received_packets:
             file.write(packets)

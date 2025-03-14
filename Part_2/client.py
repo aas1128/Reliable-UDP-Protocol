@@ -43,7 +43,7 @@ def split_into_packets(filepath, packet_size):
     while pos < len(content):
         packet_data.append(content[pos:pos+packet_size])
         pos += packet_size
-    print(packet_data)
+    print("Data per Packet", packet_data)
     return packet_data
     
 def send_packets(all_packets):
