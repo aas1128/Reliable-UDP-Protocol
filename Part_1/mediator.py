@@ -71,5 +71,6 @@ def simulateNetwork():
        
         
 
+if __name__ == "__simulateNetwork__":
 
-simulateNetwork()
+    simulateNetwork()

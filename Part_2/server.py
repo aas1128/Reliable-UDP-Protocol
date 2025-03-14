@@ -105,4 +105,6 @@ def write_file(received_packets):
     with open("createdFile.txt", "a") as file:
         for packets in received_packets:
             file.write(packets)
-server()
+
+if __name__ == "__server__":
+    server()

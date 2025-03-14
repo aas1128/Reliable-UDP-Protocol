@@ -83,4 +83,5 @@ def compute_checksum(data):
     #print("this is the checksum" , sum)
     return int(sum)
 
-receiver()
+if __name__ == "__receiver__":
+    receiver()

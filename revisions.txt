@@ -1,0 +1,13 @@
+06a21ca finished project
+efc26c5 fixed spelling in readme
+463b6b2 added the readme
+6bb302d added the requirements
+c4a8336 finished comments
+e7fb46c finished the comments
+2fcab9c added comments for part 1
+e2fc64d finished the program but need to do documentation
+272fea0 added the client that write to a file
+5ecd7db created the server class and some test data
+f7c7694 added the mediator that simulates the network conditions
+1c7b7c5 added the receiver class need to get mediator
+aaa275c finished working on the sender class with sliding window
